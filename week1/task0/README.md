@@ -30,13 +30,11 @@ CMD ["node", "dist/index.js"]
 建立一個新的 builder，取名 buildx
 ```docker buildx create --name task0```
 
-切換到這個 builder
+3. 切換到這個 builder
 ```docker buildx use task0```
 
-啟動 builder 並確認支援哪些架構
-應該會看到 linux/amd64, linux/arm64 等
-
+4. 啟動 builder 並確認支援哪些架構，應該會看到 linux/amd64, linux/arm64 等
 ```docker buildx inspect --bootstrap```
 
-同時 build x86 + ARM，直接推上 Docker Hub
+5. 同時 build x86 + ARM，直接推上 Docker Hub
 ```docker buildx build --platform linux/amd64,linux/arm64 -t <username>/<image>:<tag> --push .```
