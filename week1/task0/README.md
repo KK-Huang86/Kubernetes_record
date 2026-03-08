@@ -1,6 +1,7 @@
 # 任務要求
 
 以下為一份 TypeScript 的 Dockerfile，請說明有哪些方向可以優化此 Dockerfile。
+```
 FROM node:20
 WORKDIR /app
 COPY package*.json ./
@@ -10,6 +11,8 @@ COPY src ./src
 RUN npm run build
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
+```
+
 嘗試使用 buildx 將 dockerfile（不需要是這一份，可以請 AI 根據你的習慣語言生一個範例） 編譯成多架構的 image，Image 需要可以分別在 x86 跟 ARM 上執行。
 完成後請嘗試驗證是否有成功執行（可以開雲端 VM 執行看看）。 
 
