@@ -20,7 +20,7 @@ https://k9scli.io/topics/commands/
 4. 使用 e 更新 Nginx deployment 的 replicas。
 
 ![replicas:5](imgs/task2-4.png)
-輸入 :deploy 進入 deployment 列表，
+輸入 `:deploy` 進入 deployment 列表，
 選擇要修改的deployment
 原本replicas為5
 
