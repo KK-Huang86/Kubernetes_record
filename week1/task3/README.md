@@ -31,17 +31,20 @@ kubectl apply -f deployment.yml
 kubectl exec -n task1 <pod-name> -- rm /tmp/ready
 ```
 
-Probe 失敗後，該 Pod 會變成 0/1 Ready，但還在 Running：
+Probe 失敗後，該 Pod 會變成 0/1 Ready，但還在 Running，
+確認 Endpoints 已經移除該 Pod 的 IP，只剩下兩個 Endpoints
 
 ![pod 變成 0/1](imgs/task3-2.png)
 
-確認 Endpoints 已經移除該 Pod 的 IP：
+確認 Endpoints 已經移除該 Pod 的 IP
 
 ```bash
 kubectl get endpoints web-server-service -n task1
 ```
 
 ![endpoints 只剩兩個](imgs/task3-3.png)
+
+排除有問題的 Pod ，流量只會送到正常運作的 Pod ，所以只剩下兩個 Endpoints
 
 要恢復流量，把檔案建回來就好：
 
@@ -55,8 +58,10 @@ kubectl exec -n task1 <pod-name> -- touch /tmp/ready
 
 # 整體流程
 
+```
 Pod 啟動
 └── postStart: touch /tmp/ready ← 建立開關檔案
 └── readinessProbe 每 5 秒 cat 一次
 └── 檔案在 → Ready → 收流量
 └── 檔案不在 → Not Ready → 不收流量
+```
