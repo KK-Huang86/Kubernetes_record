@@ -1,0 +1,65 @@
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-lister-sa
+  namespace: task1
+---
+# Role：只允許列出 task1 namespace 的 pods
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-lister-role
+  namespace: task1
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+# RoleBinding：將 SA 綁定到 Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-lister-binding
+  namespace: task1
+subjects:
+  - kind: ServiceAccount
+    name: pod-lister-sa
+    namespace: task1
+roleRef:
+  kind: Role
+  name: pod-lister-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Pod：使用 Projected Volume 掛載 SA token
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-lister
+  namespace: task1
+spec:
+  serviceAccountName: pod-lister-sa
+  automountServiceAccountToken: false
+  containers:
+    - name: pod-lister
+      image: vup4k0806/pod-lister:v1
+      env:
+        - name: TARGET_NAMESPACE
+          value: "task1"
+      volumeMounts:
+        - name: sa-token
+          mountPath: /var/run/secrets/tokens
+          readOnly: true
+  volumes:
+    - name: sa-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3600
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+                - key: ca.crt
+                  path: ca.crt
+  restartPolicy: Never
