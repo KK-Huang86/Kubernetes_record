@@ -1,0 +1,6 @@
+linode_token = "your_linode_api_token_here"
+cluster_name = "k8s-practice"
+k8s_version  = "1.31"
+region       = "ap-southeast"
+node_type    = "g6-standard-2"
+node_count   = 2
