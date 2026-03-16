@@ -15,9 +15,12 @@ spec:
     spec:
       containers:
         - name: web-server
-          image: vup4k0806/web-server0316:v1
+          image: vup4k0806/web-server0316:v2
           ports:
             - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: redis-secret
 ---
 apiVersion: v1
 kind: Service

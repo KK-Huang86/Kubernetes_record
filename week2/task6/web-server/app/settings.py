@@ -1,5 +1,11 @@
-SECRET_KEY = 'simple-secret-key-for-dev'
-DEBUG = True
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = 'django-insecure-k8s-practice-key'
+
+DEBUG = False
+
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -7,10 +13,12 @@ INSTALLED_APPS = [
     'django.contrib.auth',
 ]
 
-MIDDLEWARE = []
+MIDDLEWARE = [
+    'django.middleware.common.CommonMiddleware',
+]
 
 ROOT_URLCONF = 'app.urls'
 
-DATABASES = {}
+WSGI_APPLICATION = 'app.wsgi.application'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DATABASES = {}
