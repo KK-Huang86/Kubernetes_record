@@ -86,7 +86,7 @@ kubectl exec -it <web-server-pod-name> -n week2 -- sh
 nslookup redis-0.redis-headless.week2.svc.cluster.local
 ```
 
-![DNS 解析結果](imgdns-nslookups/.png)
+![DNS 解析結果](imgs/dns-nslookup.png)
 
 7. 驗證整條鏈路：透過 nginx-service 打 `/redis/` endpoint
 
