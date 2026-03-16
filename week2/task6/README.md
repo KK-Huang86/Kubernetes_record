@@ -65,7 +65,7 @@
 ![Nginx 流量導入 web-server](imgs/nginx-proxy1.png)
 ![Nginx 流量導入 web-server](imgs/nginx-proxy2.png)
 
-Response 為 Hello K8s
+Response 為 Hello K8s，確認流量有經過Nginx 再導到 web-server
 
 3. 建立 Redis StatefulSet（2 replicas），image 為 `redis:7-alpine`，並使用 Headless Service（clusterIP: None），每個 pod 透過 `volumeClaimTemplates` 自動建立 PVC，確保資料持久性
 
@@ -75,7 +75,7 @@ kubectl get pvc -n week2
 
 ![Redis StatefulSet 與 PVC 狀態](imgs/redis-statefulset.png)
 
-4. 將 Redis 連線資訊（REDIS_HOST、REDIS_PORT、REDIS_PASSWORD）寫成 Secret，使用 `stringData` 欄位，不需要手動 base64 編碼
+4. 將 Redis 連線資訊（REDIS_HOST、REDIS_PORT、REDIS_PASSWORD）寫成 Secret，使用 `stringData` 欄位（機敏資訊應改成 Data，再以 base64加密 ）
 
 5. 在 web-server Deployment 中透過 `envFrom.secretRef` 將 redis-secret 注入為環境變數，pod 啟動後可直接使用 `os.environ.get('REDIS_HOST')` 取得連線資訊
 
