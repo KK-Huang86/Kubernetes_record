@@ -111,6 +111,7 @@ curl -H "Host: grafana.local" http://127.0.0.1
 
 ## 整體的流量路線
 
+```
 Client
 瀏覽器輸入 grafana.local
 → /etc/hosts 解析成 127.0.0.1
@@ -118,3 +119,4 @@ Client
 → ingress-nginx Pod（讀 Ingress 規則：grafana.local → practiceapp-grafana）
 → practiceapp-grafana Service (week2 namespace, ClusterIP)
 → Grafana Pod
+```
