@@ -28,6 +28,8 @@ helm repo add grafana https://grafana.github.io/helm-charts
 helm install <name> grafana/grafana -n week2
 ```
 
+![helm install grafana](imgs/task8-2.png)
+
 2. 安裝 ingress-nginx
 
 ```bash
@@ -44,7 +46,7 @@ helm install ingress-nginx ingress-nginx/ingress-nginx -n week2
 minikube addons list | grep ingress
 ```
 
-![ingress已經安裝]()
+![ingress已經安裝](imgs/task8-3.png)
 
 這裡的 `Nginx-ingress`是 `Cluster`層級，所以不論是在不同 `namespace`都可以被處理
 minikube addon 幫你裝好了 ingress-nginx controller
@@ -58,7 +60,7 @@ Ingress 資源 → nginx 自動讀取 → 依規則轉發流量 → 將流量轉
 kubectl get ingress -n week2
 ```
 
-![查看ingress]()
+![查看ingress](imgs/task8-4.png)
 查看 ingress 設定是否完整無誤
 
 4. 查看 Nginx-ingress service 的設置
@@ -70,11 +72,11 @@ kubectl get svc -n ingress-nginx
 為什麼這裡有一個 namespace 為 ingress-nginx？
 此為 minikube 啟用 ingress addon 時，自動建立 ingress-nginx namespace
 
-![nginx-ingress 的service的設定]()
+![nginx-ingress 的service的設定](imgs/task8-5.png)
 
 可以看到 TYPE 為 `NodePort`，因此要另外建立一個 LoadBalancer Service 指向 ingress-nginx pods
 
-5. 建立一個 service TYPE 為 `loadbalancer`，並指向 ingress-nginx pods
+5. 建立一個 service TYPE 為 `loadbalancer`，selector 要指向 `app.kubernetes.io/name: ingress-nginx` ingress-nginx Pod
 
 並開啟 minikube tunnel
 
@@ -82,9 +84,11 @@ kubectl get svc -n ingress-nginx
 minikube tunnel
 ```
 
-![TYPE為 loadBalancer且有 EXTERNAL-IP]()
+![TYPE為 loadBalancer且有 EXTERNAL-IP](imgs/task8-6.png)
 
 6. 設定 /etc/hosts
+
+將 grafana.local 在本機解析為 127.0.0.1，因為本機沒有真實 DNS，需手動設定
 
 ```bash
 echo "127.0.0.1  grafana.local" | sudo tee -a /etc/hosts
@@ -94,7 +98,8 @@ echo "127.0.0.1  grafana.local" | sudo tee -a /etc/hosts
 
 網址 或者 curl
 
-```bash
+```
+網址輸入
 grafana.local
 ```
 
@@ -102,11 +107,12 @@ grafana.local
 curl -H "Host: grafana.local" http://127.0.0.1
 ```
 
-![完整 Grafana登入入口]()
+![完整 Grafana登入入口](imgs/task8-7.png)
 
 ## 整體的流量路線
 
 Client
+瀏覽器輸入 grafana.local
 → /etc/hosts 解析成 127.0.0.1
 → LoadBalancer Service (127.0.0.1:80, ingress-nginx namespace)
 → ingress-nginx Pod（讀 Ingress 規則：grafana.local → practiceapp-grafana）
