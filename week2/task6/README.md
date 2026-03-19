@@ -65,7 +65,7 @@
 ![Nginx 流量導入 web-server](imgs/nginx-proxy1.png)
 ![Nginx 流量導入 web-server](imgs/nginx-proxy2.png)
 
-Response 為 Hello K8s，確認流量有經過Nginx 再導到 web-server
+Response 為 Hello K8s，確認流量有經過 Nginx 再導到 web-server
 
 3. 建立 Redis StatefulSet（2 replicas），image 為 `redis:7-alpine`，並使用 Headless Service（clusterIP: None），每個 pod 透過 `volumeClaimTemplates` 自動建立 PVC，確保資料持久性
 
