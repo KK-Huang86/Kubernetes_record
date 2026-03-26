@@ -1,0 +1,13 @@
+adminPassword: admin123
+service:
+  type: NodePort
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.monitoring.svc.cluster.local:80
+      access: proxy
+      isDefault: true

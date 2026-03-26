@@ -24,3 +24,15 @@ spec:
         hostPath:
           path: /var/log/nginx
           type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: week2
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
