@@ -1,4 +1,4 @@
-#任務要求
+# 任務要求
 
 嘗試根據此教學（https://grafana.com/docs/loki/latest/setup/install/helm/install-monolithic/）
 使用 Helm 安裝 Loki 及 Grafana（不一定要 monolithic 也沒關係，但 monolithic 應該提供了驗證可行性的最簡單方式，應該足以完成這一題的要求），
