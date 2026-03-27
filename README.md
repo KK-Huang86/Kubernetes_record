@@ -22,6 +22,7 @@
 | [task6](week2/task6) | ConfigMap / StatefulSet / Secret  | Nginx ConfigMap 掛載設定、Redis StatefulSet + PV、Headless Service DNS 解析、Secret 注入 ENV  |
 | [task7](week2/task7) | 自製 Helm Chart & 推送至 Registry | 建立 Helm Chart（Nginx Deployment + values.yaml），推送至 hosted registry 並 install          |
 | [task8](week2/task8) | Nginx Ingress & Grafana           | Helm 安裝 Grafana、ingress-nginx Controller、Ingress hostname 路由、LoadBalancer 對外流量路徑 |
+| [task9](week2/task9) | 集中式日誌收集（Loki + Grafana）  | Helm 安裝 Loki + Grafana、Nginx log 寫入 HostPath、Promtail DaemonSet 收集 log 推送至 Loki   |
 
 ## 環境
 
