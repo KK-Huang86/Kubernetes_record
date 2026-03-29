@@ -85,8 +85,11 @@ kubectl port-forward svc/gitlab-nginx-ingress-controller 8443:443 -n gitlab
 ![Gitlab登入畫面]()
 
 
-
-
+5. 取得 ```Gitlab```的密碼
+```bash
+kubectl get secret gitlab-gitlab-initial-root-password \
+  -n gitlab -o jsonpath='{.data.password}' | base64 -d
+```
 
 -----
 
