@@ -45,25 +45,8 @@ helm show values gitlab/gitlab > gitlab-values.yaml
 
 可能要避免的坑：在 macOS Docker driver 下，`minikube ip`（e.g. `192.168.49.2`）從 host 無法直接連到，因此 domain 必須使用 `127.0.0.1.nip.io`，讓 DNS 解析到 `127.0.0.1`。
 
-3. 查看 ```Gitlab```的 pod 以及 ingress 設置
 
-確保 ```Gitlab```的 pod 都跑完並且執行中
-```bash
-kubectl get pods -n gitlab
-```
-
-查看 ingress 設置
-```bash
-kubectl get ingress -n gitlab
-```
-
-GitLab Helm Chart 自帶一個 nginx-ingress-controller，其 Service 類型為 LoadBalancer
-查看 ingress ADDRESS 是否有值：
-![address 有值的](imgs/)
-
-
-
-4. 使用 ```kubectl port-forward``` 進行轉發
+3. 使用 ```kubectl port-forward``` 進行轉發
 
 在 macOS Docker driver 上，有兩種方式可以連到 GitLab：
 
@@ -82,19 +65,19 @@ kubectl port-forward svc/gitlab-nginx-ingress-controller 8443:443 -n gitlab
 打開瀏覽器輸入 ```https://gitlab.127.0.0.1.nip.io:8443```
 
 會出現自簽憑證警告，點「進階」→「繼續前往」即可。
-![Gitlab登入畫面]()
+![Gitlab登入畫面](imgs/task10-1.png)
 
 
-5. 取得 ```Gitlab```的密碼
+4. 取得 ```Gitlab```的密碼
 ```bash
 kubectl get secret gitlab-gitlab-initial-root-password \
   -n gitlab -o jsonpath='{.data.password}' | base64 -d
 ```
 
 成功登入 ```Gitlab```
-![Gitlab成功登入畫面]()
+![Gitlab成功登入畫面](imgs/task10-2.png)
 
-6. 在 local 推一個 repo上去
+5. 在 local 推一個 repo上去
 
 先在```Gitlab```創建一個 repo
 再創建要 push上去的資料夾
@@ -111,6 +94,8 @@ git remote add origin https://gitlab.127.0.0.1.nip.io:8443/root/K8s_task10.git
 
 fatal: unable to access 'https://gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git/': SSL certificate problem: unable to get local issuer certificate
 
+![SSL阻擋](imgs/task10-3.png)
+
 暫時關掉憑證
 ```bash
 git config --global http.sslVerify false
@@ -121,16 +106,16 @@ git config --global http.sslVerify false
 git push https://root:$(kubectl get secret gitlab-gitlab-initial-root-password -n gitlab -o jsonpath='{.data.password}' | base64 -d)@gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git main
 ```
 
-![git push 到Gitlab]()
+![git push 到Gitlab](imgs/task10-4.png)
 
 ------
 
-7. 使用 ```helm create```建立 helm 模板
+6. 使用 ```helm create```建立 helm 模板
 ```bash
 helm create task6-chart
 ```
 
-8. 把 task6 的 k8s yaml 搬進 templates/，加上 values.yaml 參數化
+7. 把 task6 的 k8s yaml 搬進 templates/，加上 values.yaml 參數化
 ```
 task6-chart/
 ├── Chart.yaml
@@ -143,18 +128,17 @@ task6-chart/
     └── web-server.yaml
 ```
 
-![task6-chart 結構]()
+![task6-chart 結構](imgs/task10-5.png)
 
-9. 使用 ```helm lint task6-chart``` 進行語法檢查
+8. 使用 ```helm lint task6-chart``` 進行語法檢查
 
-10. 輸入```helm template task6 task6-chart``` 進行渲染
+輸入```helm template task6 task6-chart``` 進行渲染
 
-11. 打包 ```helm package task6-chart```
+9. 打包 ```helm package task6-chart```
 
 ------
 
-12. 安裝 ```harbor```，並且將
-將入 harbor 的 helm repo
+10. 安裝 ```harbor```，並且加入 harbor 的 helm repo
 ```bash
 helm repo add harbor https://helm.goharbor.io
 ```
@@ -185,7 +169,7 @@ kubectl port-forward svc/harbor -n harbor 30003:443
 
 瀏覽器輸入 ```https://127.0.0.1:30003```
 
-![harbor登入畫面]()
+![harbor登入畫面](imgs/task10-6.png)
 
 - 帳號：`admin`
 - 密碼：`Harbor12345`
@@ -205,11 +189,11 @@ helm push task6-chart-0.1.0.tgz \
   --insecure-skip-tls-verify
 ```
 
-![成功將helm 推上 harbor](imgs/)
+![成功將helm 推上 harbor](imgs/task10-7.png)
 
 -----
 
-13. 安裝 ArgoCD
+11. 安裝 ArgoCD
 ```bash
 kubectl create namespace argocd
 ```
@@ -227,8 +211,6 @@ kubectl apply -n argocd \
 kubectl port-forward svc/argocd-server -n argocd 8080:443 --address 0.0.0.0
 ```
 
-![ArgoCD 登入畫面]()
-
 取得密碼
 ```bash
 kubectl get secret argocd-initial-admin-secret \
@@ -236,7 +218,46 @@ kubectl get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d && echo
 ```
 
-![ArgoCD成功登入畫面]()
+![ArgoCD成功登入畫面](imgs/task10-8.png)
+
+將 ```task6-chart``` 推上 ```Gitlab```
+
+```bash
+git remote add gitlab https://gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git
+
+```
+
+```bash
+git push https://root:$(kubectl get secret gitlab-gitlab-initial-root-password \
+  -n gitlab -o jsonpath='{.data.password}' | base64 -d)@gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git main --force
+```
+![推上該reop](imgs/task10-9.png)
+
+
+12. ArgoCD設定，允許透過git進行連接，同時向 ```Gitlab```申請 access token，並且填入帳號及 access token
+
+![ArgoCD允許git連接](imgs/task10-10.png)
+
+13. 在 ArgoCD 新增一個 Applications，指向 ```Gitlab``` repo，
+
+
+ **+ NEW APP**，填入：
+
+| 欄位 | 值 |
+|------|----|
+| Application Name | `task10` |
+| Project | `default` |
+| Sync Policy | `Automatic` 或 `Manual` |
+| Repository URL | 你的 Git repo，http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/k8s_task10.git|
+| Revision | `HEAD` 或 branch name |
+| Path | `.`（repo 根目錄就是 yaml 所在位置） |
+| Cluster URL | `https://kubernetes.default.svc`（本機叢集） |
+| Namespace | `default` 或自訂 |
+
+![成功在ArgoCD部署](imgs/task10-11.png)
+
+Namespace 選擇 task10，透過 ArgoCD，該 Namespace 確實建立相對應的 pods
+![Namespace的pod](imgs/task10-12.png)
 
 -----
 
