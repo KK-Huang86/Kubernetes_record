@@ -43,7 +43,7 @@ helm install gitlab gitlab/gitlab \
 helm show values gitlab/gitlab > gitlab-values.yaml
 ```
 
-注意：在 macOS Docker driver 下，`minikube ip`（e.g. `192.168.49.2`）從 host 無法直接連到，因此 domain 必須使用 `127.0.0.1.nip.io`，讓 DNS 解析到 `127.0.0.1`。
+可能要避免的坑：在 macOS Docker driver 下，`minikube ip`（e.g. `192.168.49.2`）從 host 無法直接連到，因此 domain 必須使用 `127.0.0.1.nip.io`，讓 DNS 解析到 `127.0.0.1`。
 
 3. 查看 ```Gitlab```的 pod 以及 ingress 設置
 
@@ -91,6 +91,37 @@ kubectl get secret gitlab-gitlab-initial-root-password \
   -n gitlab -o jsonpath='{.data.password}' | base64 -d
 ```
 
+成功登入 ```Gitlab```
+![Gitlab成功登入畫面]()
+
+6. 在 local 推一個 repo上去
+
+先在```Gitlab```創建一個 repo
+再創建要 push上去的資料夾
+```bash
+mkdir k8s_task10 && cd k8s_task10
+```
+
+git push 的 url
+
+```bash
+git remote add origin https://gitlab.127.0.0.1.nip.io:8443/root/K8s_task10.git
+
+```
+
+fatal: unable to access 'https://gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git/': SSL certificate problem: unable to get local issuer certificate
+
+暫時關掉憑證
+```bash
+git config --global http.sslVerify false
+```
+
+建立簡單的資料推上 local repo，並且帶上 push url 跟密碼
+```bash
+git push https://root:$(kubectl get secret gitlab-gitlab-initial-root-password -n gitlab -o jsonpath='{.data.password}' | base64 -d)@gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git main
+```
+
+![git push 到Gitlab]()
 -----
 
 遇到問題
@@ -104,3 +135,8 @@ kubectl describe pod gitlab-webservice-default-758f497bcf-6t7jv -n gitlab
 ```
 
 一開始給的 ```minikube```的資源太少
+因此這裡的解決方式是，重新安裝 ```minikube```，並提供其資源
+```bash
+minikube delete
+minikube start --memory=10240 --cpus=4
+```
