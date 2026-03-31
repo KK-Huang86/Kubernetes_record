@@ -122,6 +122,122 @@ git push https://root:$(kubectl get secret gitlab-gitlab-initial-root-password -
 ```
 
 ![git push 到Gitlab]()
+
+------
+
+7. 使用 ```helm create```建立 helm 模板
+```bash
+helm create task6-chart
+```
+
+8. 把 task6 的 k8s yaml 搬進 templates/，加上 values.yaml 參數化
+```
+task6-chart/
+├── Chart.yaml
+├── values.yaml
+└── templates/
+    ├── configmap.yaml
+    ├── nginx.yaml
+    ├── redis-secret.yaml
+    ├── redis.yaml
+    └── web-server.yaml
+```
+
+![task6-chart 結構]()
+
+9. 使用 ```helm lint task6-chart``` 進行語法檢查
+
+10. 輸入```helm template task6 task6-chart``` 進行渲染
+
+11. 打包 ```helm package task6-chart```
+
+------
+
+12. 安裝 ```harbor```，並且將
+將入 harbor 的 helm repo
+```bash
+helm repo add harbor https://helm.goharbor.io
+```
+
+```bash
+helm repo update
+```
+
+同時建立一個 namespace
+```bash
+kubectl create namespace harbor
+```
+
+```bash
+helm install harbor harbor/harbor \
+  --namespace harbor \
+  --set expose.type=nodePort \
+  --set expose.tls.auto.commonName=harbor.127.0.0.1.nip.io \
+  --set externalURL=https://harbor.127.0.0.1.nip.io:30003 \
+  --set expose.nodePort.ports.https.nodePort=30003 \
+  --set persistence.enabled=false
+```
+
+暫時使用 port-forward
+```bash
+kubectl port-forward svc/harbor -n harbor 30003:443
+```
+
+瀏覽器輸入 ```https://127.0.0.1:30003```
+
+![harbor登入畫面]()
+
+- 帳號：`admin`
+- 密碼：`Harbor12345`
+
+helm 登入 harbor
+```bash 
+helm registry login harbor.127.0.0.1.nip.io:30003 \
+  --username admin \
+  --password Harbor12345 \
+  --insecure
+```
+切到 打包好的 package 
+推上harbor
+```bash
+helm push task6-chart-0.1.0.tgz \
+  oci://harbor.127.0.0.1.nip.io:30003/library \
+  --insecure-skip-tls-verify
+```
+
+![成功將helm 推上 harbor](imgs/)
+
+-----
+
+13. 安裝 ArgoCD
+```bash
+kubectl create namespace argocd
+```
+
+```bash
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml \
+  --server-side
+```
+
+等 pod 跑完後，即可登入 ArgoCD
+
+依舊以 port-forward開啟
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443 --address 0.0.0.0
+```
+
+![ArgoCD 登入畫面]()
+
+取得密碼
+```bash
+kubectl get secret argocd-initial-admin-secret \
+  -n argocd \
+  -o jsonpath="{.data.password}" | base64 -d && echo
+```
+
+![ArgoCD成功登入畫面]()
+
 -----
 
 遇到問題
