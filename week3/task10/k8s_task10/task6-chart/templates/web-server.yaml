@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-server
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.webServer.replicas }}
+  selector:
+    matchLabels:
+      app: web-server
+  template:
+    metadata:
+      labels:
+        app: web-server
+    spec:
+      containers:
+        - name: web-server
+          image: {{ .Values.webServer.image }}:{{ .Values.webServer.tag }}
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: redis-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-server-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: web-server
+  ports:
+    - port: 8000
+      targetPort: 8000

@@ -1,0 +1,13 @@
+nginx:
+  replicas: 1
+  nodePort: 30080
+
+webServer:
+  image: vup4k0806/web-server0316
+  tag: v2
+  replicas: 1
+
+redis:
+  replicas: 2
+  password: redis123
+  storage: 1Gi
