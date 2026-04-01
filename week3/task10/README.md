@@ -231,10 +231,10 @@ git remote add gitlab https://gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git
 git push https://root:$(kubectl get secret gitlab-gitlab-initial-root-password \
   -n gitlab -o jsonpath='{.data.password}' | base64 -d)@gitlab.127.0.0.1.nip.io:8443/root/k8s_task10.git main --force
 ```
-![推上該reop](imgs/task10-9.png)
+![推上該repo](imgs/task10-9.png)
 
 
-12. ArgoCD設定，允許透過git進行連接，同時向 ```Gitlab```申請 access token，並且填入帳號及 access token
+12. ArgoCD設定，允許透過git 進行連接，同時向 ```Gitlab```申請 access token，並且填入帳號及 access token
 
 ![ArgoCD允許git連接](imgs/task10-10.png)
 
@@ -245,7 +245,7 @@ git push https://root:$(kubectl get secret gitlab-gitlab-initial-root-password \
 
 | 欄位 | 值 |
 |------|----|
-| Application Name | `task10` |
+| Application Name | `task` |
 | Project | `default` |
 | Sync Policy | `Automatic` 或 `Manual` |
 | Repository URL | 你的 Git repo，http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/k8s_task10.git|
@@ -259,7 +259,48 @@ git push https://root:$(kubectl get secret gitlab-gitlab-initial-root-password \
 Namespace 選擇 task10，透過 ArgoCD，該 Namespace 確實建立相對應的 pods
 ![Namespace的pod](imgs/task10-12.png)
 
------
+14. 透過 IaC 管理 ArgoCD Application（任務要求 4）
+
+ArgoCD 的 Application 本身就是一種 CRD，UI 建立的 Application 背後就是一份 YAML，可以透過 `kubectl apply` 管理，不需要進 UI 操作。
+
+先查詢目前 ArgoCD 管理的 Application：
+```bash
+kubectl get application -n argocd
+```
+![ArgoCD 的 application](imgs/task10-13.png)
+
+將 Application 匯出成 YAML：
+```bash
+kubectl get application task -n argocd -o yaml > app-task.yaml
+```
+
+匯出的 YAML 包含許多 k8s 自動產生的欄位（uid、resourceVersion、status 等），整理後只保留核心內容，存為 `app-task.yaml`：
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: task
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/k8s_task10.git
+    targetRevision: HEAD
+    path: week3/task10/k8s_task10/task6-chart
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: task10
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+套用 YAML，之後所有變更都透過此檔案管理：
+```bash
+kubectl apply -f app-task.yaml
+```
+--------
 
 遇到問題
 
