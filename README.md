@@ -24,6 +24,12 @@
 | [task8](week2/task8) | Nginx Ingress & Grafana           | Helm 安裝 Grafana、ingress-nginx Controller、Ingress hostname 路由、LoadBalancer 對外流量路徑 |
 | [task9](week2/task9) | 集中式日誌收集（Loki + Grafana）  | Helm 安裝 Loki + Grafana、Nginx log 寫入 HostPath、Promtail DaemonSet 收集 log 推送至 Loki   |
 
+### Week 3
+
+| 任務                   | 主題                        | 說明                                                                                                          |
+| ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [task10](week3/task10) | GitOps with ArgoCD & GitLab | 部署 GitLab + Harbor + ArgoCD、Helm Chart 推上 Harbor、ArgoCD 追蹤 GitLab repo 自動部署、Application CRD 管理 |
+
 ## 環境
 
 - Kubernetes: minikube / Linode LKE
