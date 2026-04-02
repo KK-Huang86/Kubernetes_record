@@ -6,6 +6,27 @@
 4. 嘗試將 2 & 3 創建出來的兩個 Applications，改成用 YAML（Custom Resource） 管理。
 5. （進階題）承 4，近一步考慮 App of Apps [https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern] 的方式進行管理。
 
+# 檔案結構
+
+```
+task10/
+├── README.md
+├── app-task.yaml              # ArgoCD Application CRD，用於 IaC 管理 ArgoCD Application
+├── imgs/                      # 實作截圖
+└── gitlab-repo/               # 推上 Gitlab 的本地 repo，供 ArgoCD 追蹤
+    ├── hello.py
+    ├── task6-chart-0.1.0.tgz  # 打包好的 Helm Chart
+    └── task6-chart/           # Task6 成品的 Helm Chart
+        ├── Chart.yaml
+        ├── values.yaml
+        └── templates/
+            ├── configmap.yaml
+            ├── nginx.yaml
+            ├── redis-secret.yaml
+            ├── redis.yaml
+            └── web-server.yaml
+```
+
 # 實作回答
 
 ## 實作步驟
@@ -82,7 +103,7 @@ kubectl get secret gitlab-gitlab-initial-root-password \
 先在```Gitlab```創建一個 repo
 再創建要 push上去的資料夾
 ```bash
-mkdir k8s_task10 && cd k8s_task10
+mkdir gitlab-repo && cd gitlab-repo
 ```
 
 git push 的 url
