@@ -10,3 +10,4 @@ if __name__ == '__main__':
     while True:
         REQUEST_COUNT.labels(method='GET').inc()
         time.sleep(10)
+

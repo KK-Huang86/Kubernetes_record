@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-metrics-app
+  namespace: task15
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: my-metrics-app
+  endpoints:
+    - port: metrics # 對應 deployment service 的 ports name
