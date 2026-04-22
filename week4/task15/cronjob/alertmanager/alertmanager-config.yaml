@@ -13,6 +13,8 @@ spec:
         value: ContainerHighCPU
   receivers:
     - name: discord
-      webhookConfigs:
-        - url: "http://alertmanager-discord.task15.svc:9094"
+      discordConfigs:
+        - apiURL:
+            key: url
+            name: discord-webhook
           sendResolved: true

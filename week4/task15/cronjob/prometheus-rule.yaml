@@ -11,14 +11,10 @@ spec:
       rules:
         - alert: ContainerHighCPU
           expr: |
-            (
-              sum(rate(container_cpu_usage_seconds_total{namespace="task15", container!=""}[1m])) by (pod, container)
-              /
-              sum(kube_pod_container_resource_limits{namespace="task15", resource="cpu", container!=""}) by (pod, container)
-            ) * 100 > 80
+            sum(rate(container_cpu_usage_seconds_total{namespace="task15", cpu="total"}[1m])) by (pod, namespace) > 0.8
           for: 1m
           labels:
             severity: warning
           annotations:
-            summary: "Container CPU 超過 80%"
-            description: "Pod {{ $labels.pod }} 的 container {{ $labels.container }} CPU 使用率超過 80%，目前為 {{ $value | printf \"%.1f\" }}%"
+            summary: "Pod {{ $labels.pod }} CPU 超過 80%"
+            description: "Pod {{ $labels.pod }}（namespace: {{ $labels.namespace }}）CPU 使用率過高，目前為 {{ $value | printf \"%.2f\" }} 核心"

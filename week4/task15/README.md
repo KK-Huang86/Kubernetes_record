@@ -9,6 +9,39 @@
 
 # 實作回答
 
+## 資料夾結構與檔案用途
+
+```
+task15/
+├── app.py                              # 常駐 metrics app（Prometheus SDK）
+├── Dockerfile                          # 打包 app.py 的 Docker image
+├── monitor/
+│   ├── deployment.yaml                 # [Deployment + Service] 部署 metrics app
+│   └── service-monitor.yaml           # [CRD] ServiceMonitor：讓 Prometheus 自動 scrape metrics app
+├── cronjob/
+│   ├── app.py                          # 非常駐 CronJob app，執行後推 metrics 到 Pushgateway
+│   ├── Dockerfile                      # 打包 cronjob app.py 的 Docker image
+│   ├── cronjob.yaml                    # [CronJob] 每分鐘執行一次 cronjob app
+│   ├── pushgateway.yaml               # [Deployment + Service] Pushgateway 中間站
+│   ├── service-monitor.yaml           # [CRD] ServiceMonitor：讓 Prometheus scrape Pushgateway
+│   ├── prometheus-rule.yaml           # [CRD] PrometheusRule：定義 CPU 超過 80% 的 alert 規則
+│   └── alertmanager/
+│       ├── alertmanager-config.yaml   # [CRD] AlertmanagerConfig：設定 alert 路由與 Discord 通知
+│       └── discord-adapter.yaml       # [Deployment + Service] Discord webhook adapter（備用）
+└── imgs/                               # README 截圖
+```
+
+### Prometheus Operator CRD 對應關係
+
+| CRD | 檔案 | 作用 |
+|-----|------|------|
+| `ServiceMonitor` | `monitor/service-monitor.yaml` | 告訴 Prometheus 要 scrape metrics app |
+| `ServiceMonitor` | `cronjob/service-monitor.yaml` | 告訴 Prometheus 要 scrape Pushgateway |
+| `PrometheusRule` | `cronjob/prometheus-rule.yaml` | 定義 alert 觸發條件（PromQL） |
+| `AlertmanagerConfig` | `cronjob/alertmanager/alertmanager-config.yaml` | 設定 alert 路由與 Discord webhook |
+
+---
+
 ## 實作步驟
 
 ### 1. 安裝 kube-prometheus-stack
@@ -169,3 +202,115 @@ kubectl get cronjob -n task15
 
 查看 Grafana
 ![查看 Grafana 關於 cronjob的 metric](imgs/task15-7.png)
+
+
+### 8. 建立 PrometheusRule，定義 CPU 超過 80% 的 alert 規則
+
+`prometheus-rule.yaml` 是 Prometheus Operator 的 CRD，Operator 偵測到後會自動將規則注入 Prometheus：
+
+```yaml
+expr: |
+  sum(rate(container_cpu_usage_seconds_total{namespace="task15", cpu="total"}[1m])) by (pod, namespace) > 0.8
+```
+
+**PromQL 說明：**
+- `container_cpu_usage_seconds_total`：cAdvisor 提供的 CPU 使用量（累積秒數）
+- `rate([1m])`：計算每秒平均增量，得到實際 CPU 使用率（單位：核心）
+- `sum by (pod, namespace)`：按 pod 聚合，並保留 `namespace` label（AlertmanagerConfig 路由需要）
+- `> 0.8`：超過 0.8 核心時觸發
+
+> 注意：`sum by` 必須保留 `namespace` label，否則 AlertmanagerConfig 的自動 namespace 匹配條件會失敗，alert 無法被正確路由
+
+```bash
+kubectl apply -f cronjob/prometheus-rule.yaml
+```
+
+---
+
+### 9. 建立 AlertmanagerConfig，路由 alert 至 Discord
+
+**第一步：建立 Discord Webhook Secret**
+
+在 Discord 頻道設定中建立 Webhook，取得 URL（格式為 `https://discord.com/api/webhooks/ID/TOKEN`）：
+
+```bash
+kubectl create secret generic discord-webhook \
+  --from-literal=url='https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN' \
+  -n task15
+```
+
+**第二步：建立 AlertmanagerConfig**
+
+`alertmanager-config.yaml` 設定 alert 路由規則與 Discord 通知：
+
+```yaml
+spec:
+  route:
+    receiver: discord
+    matchers:
+      - name: alertname
+        value: ContainerHighCPU
+  receivers:
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            key: url
+            name: discord-webhook
+          sendResolved: true
+```
+
+Alertmanager 0.25+ 原生支援 Discord webhook 格式，直接透過 `discordConfigs` 發送，不需要額外的 adapter。
+
+Prometheus Operator 會自動在路由上加上 `namespace="task15"` 的匹配條件（因為 AlertmanagerConfig 建立在 task15 namespace），確保只處理來自此 namespace 的 alert。
+
+```bash
+kubectl apply -f cronjob/alertmanager/alertmanager-config.yaml
+```
+
+**Alert 完整流程：**
+
+```
+Prometheus 偵測到 PromQL > 0.8（FIRING）
+       ↓
+Alertmanager 收到 alert
+       ↓
+AlertmanagerConfig 路由：alertname="ContainerHighCPU" + namespace="task15"
+       ↓
+discordConfigs 直接以 Discord 格式送出 webhook
+       ↓
+Discord 收到通知
+```
+
+### 10. 測試啟動 alert
+
+模擬高負載的情況，這個 Pod 會一直空跑無限迴圈，讓 CPU 飆高
+```bash
+kubectl run cpu-stress -n task15 --image=busybox --restart=Never -- sh -c "while true; do :; done"
+```
+
+Prometheus Alerts 的 `ContainerHighCPU` 呈現 `FIRING`
+![Prometheus Alerts 的 ContainerHighCPU 呈現 FIRING](imgs/task15-8.png)
+
+並且傳相關警訊到 Discord
+![警訊傳到 Discord](imgs/task15-9.png)
+
+實驗結束後進行刪除
+
+```bash
+kubectl delete pod cpu-stress -n task15
+```
+
+
+---
+
+trouble shotting
+
+```bash
+kubectl exec -n task15 alertmanager-kube-prometheus-stack-alertmanager-0 -- cat /etc/alertmanager/config_out/alertmanager.env.yaml
+```
+
+
+指令直接查 Alertmanager 收到的 alert
+```bash
+kubectl exec -n task15 alertmanager-kube-prometheus-stack-alertmanager-0 -- wget -qO- "http://localhost:9093/api/v2/alerts"
+```
