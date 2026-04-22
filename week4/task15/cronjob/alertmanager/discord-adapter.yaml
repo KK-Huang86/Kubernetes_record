@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-discord
+  namespace: task15
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager-discord
+  template:
+    metadata:
+      labels:
+        app: alertmanager-discord
+    spec:
+      containers:
+        - name: alertmanager-discord
+          image: rogerrum/alertmanager-discord:1.0.4
+          env:
+            - name: DISCORD_WEBHOOK
+              valueFrom:
+                secretKeyRef:
+                  name: discord-webhook
+                  key: url
+            - name: DISCORD_USERNAME # 需要給 USERNAME 否則會報錯
+              value: "Alertmanager"
+          ports:
+            - containerPort: 9094
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-discord
+  namespace: task15
+spec:
+  selector:
+    app: alertmanager-discord
+  ports:
+    - port: 9094
+      targetPort: 9094
+
+# discord接受的文字類型與 Alertmanager 的格式不太一樣，所以需要一個 Adapter 來轉換格式
+
+# Alertmanager 送出的 JSON：
+#{
+#  "alerts": [...],
+#  "status": "firing",
+#  "groupLabels": {...}
+#}
+
+# Discord 期望的 JSON：
+#{
+# "username": "Alertmanager",
+# "content": "訊息文字"
+#}

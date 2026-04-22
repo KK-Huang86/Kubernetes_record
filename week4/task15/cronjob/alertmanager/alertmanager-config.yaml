@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: discord-alert
+  namespace: task15
+  labels:
+    release: kube-prometheus-stack
+spec:
+  route:
+    receiver: discord
+    matchers:
+      - name: alertname
+        value: ContainerHighCPU
+  receivers:
+    - name: discord
+      webhookConfigs:
+        - url: "http://alertmanager-discord.task15.svc:9094"
+          sendResolved: true
