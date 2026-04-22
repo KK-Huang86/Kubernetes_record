@@ -34,6 +34,7 @@
 
 | 任務                   | 主題                        | 說明                                                                                                          |
 | ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [task15](week4/task15) | Prometheus & Grafana 監控   | kube-prometheus-stack 安裝、Custom Metrics、CronJob + Pushgateway、PrometheusRule CPU alert、AlertmanagerConfig 通知 Discord |
 | [task17](week4/task17) | HPA 水平自動擴縮容          | 啟用 metrics-server、建立 HPA 規則、模擬 CPU 負載觀察 Pod 自動擴容與縮容行為                                  |
 
 ## 環境
@@ -41,4 +42,5 @@
 - Kubernetes: minikube / Linode LKE
 - 容器工具: Docker / buildx
 - 管理工具: kubectl、k9s、Helm
+- 監控工具: Prometheus、Grafana、Alertmanager（kube-prometheus-stack）
 - IaC: Terraform
